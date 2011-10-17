@@ -18,7 +18,13 @@ class ModelGenerator
 			
 			$firstWord = $col[0];
 			
+			
+			
 			foreach( $col as $c ){
+
+				
+				$c = str_replace($firstWord, '', $c);
+				
 				$firstLetter = substr( $c, 0, 1 );
 				$restOfVar = substr( $c, 1 );
 				
@@ -46,60 +52,24 @@ class ModelGenerator
 	
 	private static function generateSetter( $var )
 	{
-		$firstLetter = substr( $var, 0, 1 );
+		$formattedVar = self::getVarFromColumnName( $var );
 		
-		$restOfVar = substr( $var, 1 );
+		$firstLetter = substr( $formattedVar, 0, 1 );
+		
+		$restOfVar = substr( $formattedVar, 1 );
 		
 		$firstLetter = strtoupper( $firstLetter );
 		
-		$setter = "	public function set".$firstLetter.$restOfVar."( ".$var." )\n	{\n		\$this->".$var." = ".$var.";\n	}";
+		$setter = "	public function set".$firstLetter.$restOfVar."( \$".$formattedVar." )\n	{\n		\$this->".self::getVarFromColumnName( $var )." = \$".self::getVarFromColumnName( $var ).";\n	}";
 		
 		return $setter;
 	}
 	
 	public function getTopComment()
 	{
-		return "<?php \n\n /**\n *\n * @author Mike Hart\n *\n * @version 0.1\n *\n * @copyright \n *\n * @package\n *\n * @subpackage\n *\n **/\n\n";
+		return "<?php \n\n/**\n * @author Mike Hart\n *\n * @version 0.1\n *\n * @copyright \n *\n * @package\n *\n * @subpackage\n *\n * @see Object, Database\n */\n\n";
 	}
-	
-	public function setClassMeta(array $array)
-	{
-		foreach($array as $key => $value){
-			$this->classMeta[$key] = $value;
-		}
-	}
-	
-	public function setTableName($string)
-	{
-		$this->tableName = $string;
-	}
-	
-	public function setColumns(array $array)
-	{
-		foreach($array as $col){
-			array_push($this->columns, $col);
-		}
-	}
-	
-	public function getClassMeta($formatted = true)
-	{
-		if($formatted === true){
-			return $this->generateClassMeta();
-		} else{
-		
-		}
-	}
-	
-	private function generateClassMeta()
-	{
-		$meta = "/**\n *\n";
-		
-		foreach($this->getClassMeta() as $m){
-		
-		}
-		
-	}
-	
+
 	public static function getCols( $tableName )
 	{
 		$sql = "SHOW COLUMNS FROM `".$tableName."`";
@@ -125,9 +95,9 @@ class ModelGenerator
 		$setters = "";
 		
 		foreach( $colsArray as $col ){
-			$setters .= "\n\n   /**\n 	* Sets the value of ".$col."\n 	*\n 	* @var type\n 	*/\n";
+			$setters .= "\n\n   /**\n 	* Sets the value of ".$col['Field']."\n 	*\n 	* @var ".self::getVarType( $col['Type'] )." ".self::getVarFromColumnName( $col['Field'] )."\n 	*/\n";
 			
-			$setters .= self::generateSetter( $col );
+			$setters .= self::generateSetter( $col['Field'] );
 		}
 		
 		return $setters;
@@ -135,14 +105,7 @@ class ModelGenerator
 	
 	public static function generateConstructor( $tableName, $colsArray )
 	{
-		$c = "   /**\n	* Constructs the object\n	*\n	* @param int \$id\n	*/\n	public function __construct( \$id = null )\n	{";
-		$c .= "\n		\$sql = ".self::getHydrateStatement( $tableName, $colsArray );
-		$c .= "\n		\$query = mysql_query( \$sql )\n\n";
-		$c .= "		while( \$row = mysql_fetch_row( \$query ) ){\n	";
-		
-		foreach( $colsArray as $col ){
-			$c .= "\$row[\'".$col."\'] = 
-		}
+		$c = "   /**\n	* Constructs the object\n	*\n	* @param int \$id\n	*/\n	public function __construct()\n	{\n		// construct the parent before performing custom construction.\n		parent::__construct();\n\n		// custom code here.\n	}";
 		
 		return $c;
 	}
@@ -151,13 +114,29 @@ class ModelGenerator
 	{
 		return "   /**\n	* Represents the primary key of this object\n	*/\n	const PRIMARY_KEY = \"id\";\n\n";
 	}
+	
+	private static function getVarType( $var )
+	{
+		if( strstr( $var, "int" ) ){
+			return "int";
+		} elseif( strstr( $var, "bool" ) ){
+			return "bool";
+		} else{
+			return "string";
+		}
+	}
+	
+	public static function generateAbstractMethods( $tableName )
+	{
+		return "\n\n   /**\n	* Sets the table name for this object\n	*/\n	public function setTableName()\n	{\n		\$this->tableName = \"".$tableName."\";\n	}\n";
+	}
 }
 
 Database::connect();
 
 $comment = ModelGenerator::getTopComment();
 
-$className = "class ".$_POST['class_name']."\n{\n";
+$className = "require_once \"path_to_base_object\";\nclass ".$_POST['class_name']." extends Object\n{\n";
 
 $cols = ModelGenerator::getCols( $_POST['table_name'] );
 
@@ -173,15 +152,17 @@ $constructor = ModelGenerator::generateConstructor( $_POST['table_name'], $colsA
 
 $getters = ModelGenerator::generateGetters( $colsArray );
 
-$setters = ModelGenerator::generateSetters( $colsArray );
+$setters = ModelGenerator::generateSetters( $cols );
 
 $vars = "";
 
 foreach( $colsArray as $var ){
-	$vars .= "   /**\n 	* Description...\n 	*\n 	* @var type\n 	*/\n	private $".$var."\n\n";
+	$vars .= "   /**\n 	* Description...\n 	*\n 	* @var type\n 	*/\n	private $".$var.";\n\n";
 }
 
-$file = fopen("test.php", "w"); fwrite($file, $comment.$className.$pk.$vars.$constructor.$getters.$setters."\n}");
+$abstractMethods = ModelGenerator::generateAbstractMethods( $_POST['table_name'] );
+
+$file = fopen("test2.php", "w"); fwrite($file, $comment.$className.$pk.$vars.$constructor.$abstractMethods.$getters.$setters."\n}");
 
 } else{
 ?>
