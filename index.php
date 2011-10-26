@@ -1,4 +1,16 @@
 <?php
+/**
+ * This script will create generic PHP model objects. For full information on how to use,
+ * please visit http://www.mikedhart.co.uk/2011/10/26/php-object-generator/
+ * 
+ * @author Mike Hart
+ *
+ * @copyright MIT
+ *
+ * @version 1.2
+ *
+ * @package object_generator
+ */
 
 if( isset( $_POST['class_name'] ) ){
 
