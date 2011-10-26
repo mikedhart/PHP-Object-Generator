@@ -1,7 +1,6 @@
 <?php 
 
 /**
- *
  * @author Mike Hart
  *
  * @version 0.1
@@ -13,8 +12,9 @@
  * @subpackage
  *
  * @see Object, Database
- **/
-require_once 'Object.php';
+ */
+
+require_once "path_to_base_object";
 class Slider extends Object
 {
    /**
@@ -49,24 +49,28 @@ class Slider extends Object
  	* @var type
  	*/
 	private $sliderMaxItems;
-	
-	public function setTableName()
-	{
-		$this->tableName = "sliders";
-	}
 
    /**
 	* Constructs the object
 	*
 	* @param int $id
 	*/
-	public function __construct( $id = null )
+	public function __construct()
 	{
 		// construct the parent before performing custom construction.
-		parent::__construct( $id );
+		parent::__construct();
 
 		// custom code here.
 	}
+
+   /**
+	* Sets the table name for this object
+	*/
+	public function setTableName()
+	{
+		$this->tableName = "sliders";
+	}
+
 
    /**
  	* Gets the value of id
@@ -148,13 +152,3 @@ class Slider extends Object
 		$this->sliderMaxItems = $sliderMaxItems;
 	}
 }
-
-mysql_connect("localhost", "root", "root");
-mysql_select_db("web101-dazguitar");
-
-$slider = new Slider(2);
-
-$slider->setSliderDesc("kjhk22222222222k");
-$slider->setSliderName("sdsds");
-$slider->setSliderMaxItems("kjkjk");
-$slider->save();

@@ -162,7 +162,7 @@ foreach( $colsArray as $var ){
 
 $abstractMethods = ModelGenerator::generateAbstractMethods( $_POST['table_name'] );
 
-$file = fopen("test2.php", "w"); fwrite($file, $comment.$className.$pk.$vars.$constructor.$abstractMethods.$getters.$setters."\n}");
+$file = fopen($_POST['class_name'].".php", "w"); fwrite($file, $comment.$className.$pk.$vars.$constructor.$abstractMethods.$getters.$setters."\n}");
 
 } else{
 ?>
