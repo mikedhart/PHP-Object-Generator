@@ -2,6 +2,8 @@
 /**
  * This script will create generic PHP model objects. For full information on how to use,
  * please visit http://www.mikedhart.co.uk/2011/10/26/php-object-generator/
+ *
+ * Also please remember to make sure you have an active mysql connection!
  * 
  * @author Mike Hart
  *
@@ -13,8 +15,6 @@
  */
 
 if( isset( $_POST['class_name'] ) ){
-
-require_once 'Database.php';
 
 class ModelGenerator
 {	
